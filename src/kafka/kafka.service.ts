@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
-import { Kafka, logLevel } from 'kafkajs';
+import { Kafka } from 'kafkajs';
 
 @Injectable()
 export class KafkaService {
@@ -13,7 +12,7 @@ export class KafkaService {
     const admin = this.kafka.admin();
     await admin.connect();
 
-    const topic = 'test'; // Replace with your topic name
+    const topic = 'test';
     const topics = await admin.listTopics();
 
     if (!topics.includes(topic)) {
@@ -21,8 +20,8 @@ export class KafkaService {
         topics: [
           {
             topic,
-            numPartitions: 1, // Define the number of partitions as needed
-            replicationFactor: 1, // Set the replication factor according to your setup
+            numPartitions: 1,
+            replicationFactor: 1,
           },
         ],
       });
