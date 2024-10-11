@@ -1,29 +1,63 @@
+const fs = require('fs');
 const { Kafka } = require('kafkajs');
+const PCAPNGParser = require('pcap-ng-parser');
+
+const pcapFile = './sample.pcapng';
+
+const kafka = new Kafka({
+  clientId: 'my-kafka-producer',
+  brokers: ['localhost:9092'],
+});
+
+const producer = kafka.producer();
 
 async function run() {
-  const kafka = new Kafka({
-    clientId: 'my-kafka-producer',
-    brokers: ['localhost:9092'],
-  });
+  try {
+    await producer.connect();
+    console.log('Producer connected');
 
-  const producer = kafka.producer();
+    const parser = new PCAPNGParser();
+    const myFileStream = fs.createReadStream(pcapFile);
 
-  await producer.connect();
-  console.log('Producer connected');
+    myFileStream
+      .on('data', (chunk) => {
+        parser.write(chunk);
+      })
+      .on('end', () => {
+        console.log('File read complete.');
+        parser.end();
+      });
 
-  for (let i = 0; i < 100; i++) {
-    const message = `Message ${i + 1}`; // Create a string message
-    await producer.send({
-      topic: 'test',
-      messages: [
-        { value: message }, // Send the message
-      ],
-    });
-    console.log(`Sent: ${message}`);
+    parser
+      .on('data', async (parsedPacket) => {
+        try {
+          await producer.send({
+            topic: 'test',
+            messages: [
+              {
+                value: JSON.stringify(parsedPacket),
+              },
+            ],
+          });
+        } catch (sendError) {
+          console.error('Error sending packet:', sendError);
+        }
+      })
+      .on('interface', (interfaceInfo) => {
+        console.log('Interface Info:', interfaceInfo);
+      })
+      .on('error', (error) => {
+        console.error('Parser error:', error);
+      })
+      .on('end', async () => {
+        console.log('Parsing complete.');
+        await producer.disconnect();
+        console.log('Producer disconnected');
+      });
+  } catch (error) {
+    console.error('Error running Kafka producer:', error);
+    await producer.disconnect();
   }
-
-  await producer.disconnect();
-  console.log('Producer disconnected');
 }
 
 run().catch(console.error);

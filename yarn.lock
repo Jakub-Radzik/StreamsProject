@@ -2301,6 +2301,13 @@ etag@~1.8.1:
   resolved "https://registry.yarnpkg.com/etag/-/etag-1.8.1.tgz#41ae2eeb65efa62268aebfea83ac7d79299b0887"
   integrity sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==
 
+ether-frame@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/ether-frame/-/ether-frame-0.2.0.tgz#624984d4496ec0fb83462391256e576c8cd1234a"
+  integrity sha512-DlG5fLL+Q1O+dQ2Cq8t8mq5moot45EI/+xUH1yIow/o3p5v9NeasPS8CYZrcDhOsnO7WhnkBGwiPInA2brp0pQ==
+  dependencies:
+    mac-address "~0.3.0"
+
 events@^3.2.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
@@ -3546,6 +3553,11 @@ lru-cache@^5.1.1:
   dependencies:
     yallist "^3.0.2"
 
+mac-address@~0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/mac-address/-/mac-address-0.3.0.tgz#48c5049c7d42184361de6790540014ea81bc2c51"
+  integrity sha512-MeWDulIS3dvdVRsbJCiTFZKFNCoEFL+n3GD9/Em1fTssGK/OH+/j5NUJUOLnijNp5gWk2UWjnlJnkHRMpNFfsw==
+
 magic-string@0.30.8:
   version "0.30.8"
   resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.30.8.tgz#14e8624246d2bedba70d5462aa99ac9681844613"
@@ -3942,6 +3954,18 @@ path-type@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/path-type/-/path-type-4.0.0.tgz#84ed01c0a7ba380afe09d90a8c180dcd9d03043b"
   integrity sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
+
+pcap-ng-parser@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/pcap-ng-parser/-/pcap-ng-parser-1.0.0.tgz#1be8f260bbccad7779f6cb0cacb48ce5e9d17fd1"
+  integrity sha512-ySJiSEHAaFZXkwTVj2vSTFQSfwAqg9+uiCdasz2UbIaJRH9xq/MRJwzvWWZxH0ByxJhNB8wDRdrSWrKgfI7Dwg==
+  dependencies:
+    ether-frame "^0.2.0"
+
+pcap-parser@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/pcap-parser/-/pcap-parser-0.2.1.tgz#0a797ae810c28ff08ce9108bc509d323bfe6aa6f"
+  integrity sha512-+1t1GiMpEHI+MFub/mpCmfpyU4oVOyn4h71Zp5GqC/2uv0yteM6MghazKBQMkNXgmmsCPT1JUMfqsF03cYjnyw==
 
 picocolors@^1.0.0, picocolors@^1.1.0:
   version "1.1.0"
