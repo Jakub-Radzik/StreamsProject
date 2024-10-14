@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Kafka } from 'kafkajs';
+import { DataHandlerService } from './data-handler.service';
+import { RawDataType } from 'src/utils/models';
 
 @Injectable()
 export class KafkaService {
+  constructor(private readonly dataHandler: DataHandlerService) {}
+
   private readonly kafka = new Kafka({
     clientId: 'test-consumer',
     brokers: ['localhost:9092'],
@@ -39,7 +43,7 @@ export class KafkaService {
     await consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
         const jsonMessage = JSON.parse(message.value.toString());
-        console.log('Received message:', jsonMessage);
+        this.dataHandler.handleNetworkData(jsonMessage as RawDataType);
       },
     });
   }
