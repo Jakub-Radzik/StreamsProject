@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { RawDataType } from './models';
+import { RawDataType } from '../types/models';
 
 @Injectable()
 export class NetworkService {
-  async handleNetworkData(jsonMessage: RawDataType) {
+  async parseRawData(jsonMessage: RawDataType) {
     const { interfaceId, timestampHigh, timestampLow, data } = jsonMessage;
 
     const timestamp = this.combineTimestamp(timestampHigh, timestampLow);
@@ -30,7 +30,7 @@ export class NetworkService {
     const srcMac = this.getMacAddress(buffer.slice(6, 12));
     const etherType = buffer.readUInt16BE(12);
 
-    let result: any = {
+    const result: any = {
       destMac,
       srcMac,
       etherType,
