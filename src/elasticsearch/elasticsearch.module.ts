@@ -8,7 +8,7 @@ import { ElasticsearchService } from './elasticsearch.service';
       provide: 'ELASTICSEARCH_CLIENT',
       useFactory: () => {
         return new Client({
-          node: 'http://localhost:9200', // Change if necessary
+          node: 'http://localhost:9200',
         });
       },
     },
