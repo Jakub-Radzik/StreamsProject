@@ -2,7 +2,9 @@ const fs = require('fs');
 const { Kafka } = require('kafkajs');
 const PCAPNGParser = require('pcap-ng-parser');
 
-const pcapFile = './sample.pcapng';
+// const pcapFile = './sample.pcapng';
+// const pcapFile = './port_scan.pcapng';
+const pcapFile = './port_scan_from_192.168.1.69_to_192.168.1.4.pcapng';
 
 const kafka = new Kafka({
   clientId: 'my-kafka-producer',

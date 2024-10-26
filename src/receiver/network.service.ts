@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RawDataType } from '../types/models';
+import { ParsedPacket, RawDataType } from '../common/types/models';
 
 @Injectable()
 export class NetworkService {
@@ -43,7 +43,7 @@ export class NetworkService {
 
     // You can add more parsing logic here for other EtherTypes like IPv6 (0x86DD), ARP, etc.
 
-    return result;
+    return result as ParsedPacket;
   }
 
   getMacAddress(buffer: Buffer): string {
@@ -94,12 +94,23 @@ export class NetworkService {
     const ackNumber = buffer.readUInt32BE(8);
     const dataOffset = (buffer.readUInt8(12) >> 4) * 4;
 
+    const flagsByte = buffer.readUInt8(13);
+    const flags = {
+      fin: !!(flagsByte & 0x01), // FIN flag
+      syn: !!(flagsByte & 0x02), // SYN flag
+      rst: !!(flagsByte & 0x04), // RST flag
+      psh: !!(flagsByte & 0x08), // PSH flag
+      ack: !!(flagsByte & 0x10), // ACK flag
+      urg: !!(flagsByte & 0x20), // URG flag
+    };
+
     return {
       srcPort,
       destPort,
       sequenceNumber,
       ackNumber,
       dataOffset,
+      flags,
     };
   }
 

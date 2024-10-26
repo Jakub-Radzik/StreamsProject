@@ -28,6 +28,14 @@ export interface TCPPacket {
   sequenceNumber: number;
   ackNumber: number;
   dataOffset: number;
+  flags?: {
+    syn?: boolean; // SYN flag
+    ack?: boolean; // ACK flag
+    fin?: boolean; // FIN flag
+    rst?: boolean; // RST flag
+    psh?: boolean; // PSH flag
+    urg?: boolean; // URG flag
+  };
 }
 
 export interface UDPPacket {
