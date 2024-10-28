@@ -9,6 +9,10 @@ import { ElasticsearchService } from './elasticsearch.service';
       useFactory: () => {
         return new Client({
           node: 'http://localhost:9200',
+          auth: {
+            username: 'elastic',
+            password: 'password',
+          },
         });
       },
     },

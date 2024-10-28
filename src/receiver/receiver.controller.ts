@@ -7,9 +7,13 @@ import { RawDataType } from 'src/common/types/models';
 export class ReceiverController {
   constructor(private readonly receiverService: ReceiverService) {}
 
-  @MessagePattern('test')
+  @MessagePattern('test2')
   receiveNetworkRawData(@Payload() message: RawDataType) {
-    // console.log('parse packet: ' + Date.now());
     this.receiverService.handleNetworkData(message);
+  }
+
+  @MessagePattern('pcap')
+  receivePcapPacket(@Payload() message: any) {
+    console.log('message: ', message);
   }
 }

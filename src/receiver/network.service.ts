@@ -41,7 +41,7 @@ export class NetworkService {
       result.ipv4 = this.parseIPv4Packet(buffer.slice(14));
     }
 
-    // You can add more parsing logic here for other EtherTypes like IPv6 (0x86DD), ARP, etc.
+    // EtherTypes like IPv6 (0x86DD), ARP, etc.
 
     return result as ParsedPacket;
   }

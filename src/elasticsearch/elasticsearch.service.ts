@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Client } from '@elastic/elasticsearch';
+import { NetworkPacket } from 'src/common/types/models';
 
 @Injectable()
 export class ElasticsearchService {
@@ -26,6 +27,16 @@ export class ElasticsearchService {
     return this.client.delete({
       index,
       id,
+    });
+  }
+
+  async indexPacket(packet: NetworkPacket): Promise<void> {
+    const { interfaceId, timestamp, parsedPacket } = packet;
+    const id = `${interfaceId}-${timestamp.getTime()}`;
+    await this.indexData('network-packets-v3', id, {
+      interfaceId,
+      timestamp,
+      parsedPacket,
     });
   }
 }
