@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Client } from '@elastic/elasticsearch';
-import { NetworkPacket } from 'src/common/types/models';
+import { PcapngNetworkPacket } from 'src/common/types/pcapng.models';
 
 @Injectable()
 export class ElasticsearchService {
@@ -30,7 +30,7 @@ export class ElasticsearchService {
     });
   }
 
-  async indexPacket(packet: NetworkPacket): Promise<void> {
+  async indexPacket(packet: PcapngNetworkPacket): Promise<void> {
     const { interfaceId, timestamp, parsedPacket } = packet;
     const id = `${interfaceId}-${timestamp.getTime()}`;
     await this.indexData('network-packets-v3', id, {

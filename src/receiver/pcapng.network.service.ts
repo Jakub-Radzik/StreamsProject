@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ParsedPacket, RawDataType } from '../common/types/models';
+import { ParsedPacket, PcapngRawDataType } from '../common/types/pcapng.models';
 
 @Injectable()
-export class NetworkService {
-  async parseRawData(jsonMessage: RawDataType) {
+export class PcapngNetworkService {
+  async parseRawData(jsonMessage: PcapngRawDataType) {
     const { interfaceId, timestampHigh, timestampLow, data } = jsonMessage;
 
     const timestamp = this.combineTimestamp(timestampHigh, timestampLow);

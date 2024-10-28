@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { NetworkPacket } from 'src/common/types/models';
+import { PcapngNetworkPacket } from 'src/common/types/pcapng.models';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { MY_IP_ADDRESS } from 'src/common/constants';
@@ -8,7 +8,7 @@ import { MY_IP_ADDRESS } from 'src/common/constants';
 export class PortScanService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
-  async processPacket(packet: NetworkPacket) {
+  async processPacket(packet: PcapngNetworkPacket) {
     const { parsedPacket, timestamp } = packet;
 
     if (!parsedPacket.ipv4) return;

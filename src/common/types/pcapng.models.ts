@@ -1,4 +1,6 @@
-export interface NetworkPacket {
+// OLD TYPES FOR PACKET SCRAPED USING PCAPNG FILE TYPE
+
+export interface PcapngNetworkPacket {
   interfaceId: number;
   timestamp: Date;
   parsedPacket: ParsedPacket;
@@ -44,7 +46,7 @@ export interface UDPPacket {
   length: number;
 }
 
-export interface RawDataType {
+export interface PcapngRawDataType {
   interfaceId: number;
   timestampHigh: number;
   timestampLow: number;
