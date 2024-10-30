@@ -1,6 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Client } from '@elastic/elasticsearch';
 import { PcapngNetworkPacket } from 'src/common/types/pcapng.models';
+import { PcapParsedPacket } from 'src/common/types/pcap.models';
+import { createHash } from 'crypto';
 
 @Injectable()
 export class ElasticsearchService {
@@ -30,13 +32,30 @@ export class ElasticsearchService {
     });
   }
 
-  async indexPacket(packet: PcapngNetworkPacket): Promise<void> {
-    const { interfaceId, timestamp, parsedPacket } = packet;
-    const id = `${interfaceId}-${timestamp.getTime()}`;
-    await this.indexData('network-packets-v3', id, {
-      interfaceId,
+  async indexPacket(packet: PcapParsedPacket): Promise<void> {
+    const { ethernetPayload, timestamp, timestampISO, caplen, len, link_type } =
+      packet;
+    const id = this.generatePacketId(packet);
+    await this.indexData('network-packets-v4', id, {
+      link_type,
       timestamp,
-      parsedPacket,
+      timestampISO,
+      caplen,
+      len,
+      ethernetPayload,
     });
+  }
+
+  private generatePacketId(packet: PcapParsedPacket): string {
+    const {
+      ethernetPayload: {
+        ipPayload: { src_ip_addr, dest_ip_addr, identification },
+      },
+      timestamp,
+    } = packet;
+
+    const uniqueString = `${src_ip_addr}-${dest_ip_addr}-${timestamp}-${identification}`;
+
+    return createHash('sha256').update(uniqueString).digest('hex');
   }
 }
