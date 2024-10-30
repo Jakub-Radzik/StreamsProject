@@ -25,34 +25,27 @@ export class PortScanService {
     let tcp: TransportPayload | undefined;
     let udp: TransportPayload | undefined;
 
-    // Check for TCP or UDP
     if (protocol_number === IPProtocol.TCP) {
-      // TCP protocol number
       tcp = ethernetPayload.ipPayload.transportPayload;
       if (tcp.flags?.ack) return; // Ignore ACK packets
-      dstPort = tcp.dport; // Destination port
+      dstPort = tcp.dport;
     } else if (protocol_number === IPProtocol.UDP) {
-      // UDP protocol number
       udp = ethernetPayload.ipPayload.transportPayload;
-      dstPort = udp.dport; // Destination port
+      dstPort = udp.dport;
     } else {
       return; // Unsupported protocol
     }
 
-    // Define the time window key based on the source IP and timestamp
     const timeWindowKey = `${src_ip_addr}:${Math.floor(timestamp / 10000)}`; // 10-second time window
 
-    // Retrieve or initialize scan data from the cache
     let scanData = (await this.cacheManager.get<{
       ports: Set<number>;
       count: number;
     }>(timeWindowKey)) || { ports: new Set(), count: 0 };
 
-    // Update scan data
     scanData.ports.add(dstPort);
     scanData.count++;
 
-    // Set updated scan data in cache with a TTL of 20 seconds
     await this.cacheManager.set(timeWindowKey, scanData, 20_000);
 
     const uniquePortsCount = scanData.ports.size;
