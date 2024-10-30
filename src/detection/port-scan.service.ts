@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { PcapngNetworkPacket } from 'src/common/types/pcapng.models';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { MY_IP_ADDRESS } from 'src/common/constants';
