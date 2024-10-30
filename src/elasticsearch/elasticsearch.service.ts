@@ -3,7 +3,7 @@ import { Client } from '@elastic/elasticsearch';
 import { PcapParsedPacket } from 'src/common/types/pcap.models';
 import { createHash } from 'crypto';
 
-const network_index = 'network-packets-v4';
+const network_index = 'network-packets';
 
 @Injectable()
 export class ElasticsearchService {

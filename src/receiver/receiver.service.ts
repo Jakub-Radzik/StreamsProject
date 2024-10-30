@@ -15,8 +15,7 @@ export class ReceiverService {
   async handlePcapNetworkData(jsonMessage: PcapIncomingPacket) {
     const parsedPacket =
       this.pcapNetworkService.parseIncomingPacket(jsonMessage);
-    console.log(parsedPacket);
-    // this.portScanService.processPcapPacket(parsedPacket);
-    // this.elasticSearchService.indexPacket(parsedPacket);
+    this.portScanService.processPcapPacket(parsedPacket);
+    this.elasticSearchService.indexPacket(parsedPacket);
   }
 }

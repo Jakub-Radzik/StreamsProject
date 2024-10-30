@@ -1,10 +1,8 @@
-const fs = require('fs');
+const pcap = require('pcap');
 const { Kafka } = require('kafkajs');
-const PCAPNGParser = require('pcap-ng-parser');
 
-// const pcapFile = './sample.pcapng';
-// const pcapFile = './port_scan.pcapng';
-const pcapFile = './port_scan_from_192.168.1.69_to_192.168.1.4.pcapng';
+// const pcapFilePath = './today.pcap';
+const pcapFilePath = './port_scan_from_192.168.1.69_to_192.168.1.4.pcap';
 
 const kafka = new Kafka({
   clientId: 'my-kafka-producer',
@@ -13,53 +11,42 @@ const kafka = new Kafka({
 
 const producer = kafka.producer();
 
+producer
+  .connect()
+  .then(run)
+  .catch((err) => {
+    console.error('Failed to connect to Kafka:', err);
+  });
+
 async function run() {
-  try {
-    await producer.connect();
-    console.log('Producer connected');
+  const pcapSession = pcap.createOfflineSession(pcapFilePath, 'ip');
 
-    const parser = new PCAPNGParser();
-    const myFileStream = fs.createReadStream(pcapFile);
+  pcapSession.on('packet', async (rawPacket) => {
+    const packet = pcap.decode.packet(rawPacket);
 
-    myFileStream
-      .on('data', (chunk) => {
-        parser.write(chunk);
-      })
-      .on('end', () => {
-        console.log('File read complete.');
-        parser.end();
+    try {
+      await producer.send({
+        topic: 'pcap',
+        messages: [
+          {
+            value: JSON.stringify(packet),
+          },
+        ],
       });
+      console.log('Packet sent to Kafka.');
+    } catch (error) {
+      console.error('Error sending packet to Kafka:', error);
+    }
+  });
 
-    parser
-      .on('data', async (parsedPacket) => {
-        try {
-          await producer.send({
-            topic: 'test',
-            messages: [
-              {
-                value: JSON.stringify(parsedPacket),
-              },
-            ],
-          });
-        } catch (sendError) {
-          console.error('Error sending packet:', sendError);
-        }
-      })
-      .on('interface', (interfaceInfo) => {
-        console.log('Interface Info:', interfaceInfo);
-      })
-      .on('error', (error) => {
-        console.error('Parser error:', error);
-      })
-      .on('end', async () => {
-        console.log('Parsing complete.');
-        await producer.disconnect();
-        console.log('Producer disconnected');
-      });
-  } catch (error) {
-    console.error('Error running Kafka producer:', error);
-    await producer.disconnect();
-  }
+  pcapSession.on('complete', async () => {
+    console.log('Finished reading PCAP file.');
+    console.log('Kafka producer disconnected.');
+  });
+
+  pcapSession.on('error', (err) => {
+    console.error(`Error: ${err.message}`);
+  });
+
+  console.log(`Starting to read PCAP file: ${pcapFilePath}`);
 }
-
-run().catch(console.error);
