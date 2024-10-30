@@ -1,8 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Client } from '@elastic/elasticsearch';
-import { PcapngNetworkPacket } from 'src/common/types/pcapng.models';
 import { PcapParsedPacket } from 'src/common/types/pcap.models';
 import { createHash } from 'crypto';
+
+const network_index = 'network-packets-v4';
 
 @Injectable()
 export class ElasticsearchService {
@@ -10,9 +11,9 @@ export class ElasticsearchService {
     @Inject('ELASTICSEARCH_CLIENT') private readonly client: Client,
   ) {}
 
-  async search(index: string, query: any) {
+  async search(query: any) {
     return this.client.search({
-      index,
+      index: network_index,
       body: query,
     });
   }
@@ -36,7 +37,7 @@ export class ElasticsearchService {
     const { ethernetPayload, timestamp, timestampISO, caplen, len, link_type } =
       packet;
     const id = this.generatePacketId(packet);
-    await this.indexData('network-packets-v4', id, {
+    await this.indexData(network_index, id, {
       link_type,
       timestamp,
       timestampISO,
