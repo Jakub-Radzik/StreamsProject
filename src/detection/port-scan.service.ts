@@ -57,7 +57,6 @@ export class PortScanService {
     const flaggedKey = `flagged:${src_ip_addr}`;
     const existingFlag = await this.cacheManager.get(flaggedKey);
 
-    // Check conditions for flagging potential port scanning
     if (
       !existingFlag &&
       uniquePortsCount > UNIQUE_PORTS_THRESHOLD &&
