@@ -28,27 +28,6 @@ export type TcpOptions = {
   echo?: number | null; // Can be number or null
 };
 
-// Structure for payload of the packet
-export type PayloadData = {
-  type: string;
-  data: any; // Can be a more specific type
-};
-
-export type TransportPayload = {
-  sport: number; // Source port
-  dport: number; // Destination port
-  seqno: number; // Sequence number
-  ackno: number; // Acknowledgment number
-  headerLength: number; // Length of the TCP/UDP header
-  flags: Flags;
-  windowSize: number; // Window size
-  checksum: number; // Checksum
-  urgentPointer?: number; // Urgent pointer
-  options?: TcpOptions; // TCP options if applicable
-  dataLength: number; // Length of the payload
-  data?: PayloadData; // Actual payload data
-};
-
 // Structure for IP layer
 export type IpPayload = {
   version: number; // IP version
@@ -66,15 +45,6 @@ export type IpPayload = {
   payload?: TransportPayload; // The transport layer payload
 };
 
-export interface ParsedIpPayload
-  extends Omit<IpPayload, 'payload' | 'saddr' | 'daddr' | 'protocol'> {
-  transportPayload?: TransportPayload;
-  src_ip_addr: string;
-  dest_ip_addr: string;
-  protocol_number: IPProtocol;
-  protocol_name: string;
-}
-
 export type EthernetPayload = {
   dhost: Address; // Destination MAC address
   shost: Address; // Source MAC address
@@ -82,13 +52,6 @@ export type EthernetPayload = {
   vlan?: number; // VLAN ID if applicable
   payload: IpPayload; // Payload can be an IP packet
 };
-
-export interface ParsedEthernetPayload
-  extends Omit<EthernetPayload, 'payload' | 'dhost' | 'shost'> {
-  ipPayload: ParsedIpPayload;
-  src_mac: string;
-  dest_mac: string;
-}
 
 export type PcapIncomingPacket = {
   link_type: string; // e.g., 'LINKTYPE_ETHERNET'
@@ -101,6 +64,7 @@ export type PcapIncomingPacket = {
   payload: EthernetPayload;
 };
 
+// AFTER PARSING:
 export interface PcapParsedPacket {
   link_type: string;
   timestamp: number;
@@ -109,3 +73,40 @@ export interface PcapParsedPacket {
   len: number;
   ethernetPayload: ParsedEthernetPayload;
 }
+
+export interface ParsedEthernetPayload
+  extends Omit<EthernetPayload, 'payload' | 'dhost' | 'shost'> {
+  ipPayload: ParsedIpPayload;
+  src_mac: string;
+  dest_mac: string;
+}
+
+export interface ParsedIpPayload
+  extends Omit<IpPayload, 'payload' | 'saddr' | 'daddr' | 'protocol'> {
+  transportPayload?: TransportPayload;
+  src_ip_addr: string;
+  dest_ip_addr: string;
+  protocol_number: IPProtocol;
+  protocol_name: string;
+}
+
+export type TransportPayload = {
+  sport: number; // Source port
+  dport: number; // Destination port
+  seqno: number; // Sequence number
+  ackno: number; // Acknowledgment number
+  headerLength: number; // Length of the TCP/UDP header
+  flags: Flags;
+  windowSize: number; // Window size
+  checksum: number; // Checksum
+  urgentPointer?: number; // Urgent pointer
+  options?: TcpOptions; // TCP options if applicable
+  dataLength: number; // Length of the payload
+  data?: PayloadData; // Actual payload data
+};
+
+// Structure for payload of the packet
+export type PayloadData = {
+  type: string;
+  data: any; // Can be a more specific type
+};

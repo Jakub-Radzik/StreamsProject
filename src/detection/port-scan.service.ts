@@ -7,10 +7,14 @@ import {
   TransportPayload,
 } from 'src/common/types/pcap.models';
 import { IPProtocol } from 'src/common/types/ip.protocols';
+import { ElasticsearchService } from 'src/elasticsearch/elasticsearch.service';
 
 @Injectable()
 export class PortScanService {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly elasticsearchService: ElasticsearchService,
+  ) {}
 
   async processPcapPacket(parsedPacket: PcapParsedPacket) {
     const { ethernetPayload, timestamp } = parsedPacket;
@@ -33,10 +37,10 @@ export class PortScanService {
       udp = ethernetPayload.ipPayload.transportPayload;
       dstPort = udp.dport;
     } else {
-      return; // Unsupported protocol
+      return;
     }
 
-    const timeWindowKey = `${src_ip_addr}:${Math.floor(timestamp / 10000)}`; // 10-second time window
+    const timeWindowKey = `${src_ip_addr}:recent`;
 
     let scanData = (await this.cacheManager.get<{
       ports: Set<number>;
@@ -46,63 +50,56 @@ export class PortScanService {
     scanData.ports.add(dstPort);
     scanData.count++;
 
-    await this.cacheManager.set(timeWindowKey, scanData, 20_000);
+    await this.cacheManager.set(timeWindowKey, scanData, 10_000);
 
     const uniquePortsCount = scanData.ports.size;
     const connectionCount = scanData.count;
 
-    const UNIQUE_PORTS_THRESHOLD = 10;
-    const CONNECTIONS_THRESHOLD = 20;
+    const UNIQUE_PORTS_THRESHOLD = 50;
+    const CONNECTIONS_THRESHOLD = 50;
 
     const flaggedKey = `flagged:${src_ip_addr}`;
-    const existingFlag = await this.cacheManager.get(flaggedKey);
 
     if (
-      !existingFlag &&
       uniquePortsCount > UNIQUE_PORTS_THRESHOLD &&
       connectionCount > CONNECTIONS_THRESHOLD
     ) {
-      await this.flagPotentialScan(
-        src_ip_addr,
-        uniquePortsCount,
-        connectionCount,
-      );
       await this.cacheManager.set(
         flaggedKey,
-        { uniquePortsCount, connectionCount },
-        20_000,
-      );
-    } else if (
-      existingFlag &&
-      //@ts-ignore
-      uniquePortsCount > existingFlag.uniquePortsCount
-    ) {
-      await this.flagPotentialScan(
-        src_ip_addr,
-        uniquePortsCount,
-        connectionCount,
-      );
-      await this.cacheManager.set(
-        flaggedKey,
-        { uniquePortsCount, connectionCount },
-        20_000,
+        {
+          srcIp: src_ip_addr,
+          uniquePortsCount,
+          connectionCount,
+          timestamp,
+        },
+        200_000,
       );
     }
   }
 
-  async flagPotentialScan(
-    srcIp: string,
-    uniquePortsCount: number,
-    connectionCount: number,
-  ) {
-    console.log(
-      `Potential port scan detected from ${srcIp}. Unique Ports: ${uniquePortsCount}, Connections: ${connectionCount}`,
-    );
-
-    await this.cacheManager.set(`flagged:${srcIp}`, {
-      uniquePortsCount,
-      connectionCount,
-      timestamp: Date.now(),
-    });
+  async saveToElasticsearch(scanData: {
+    srcIp: string;
+    uniquePortsCount: number;
+    connectionCount: number;
+    timestamp: number;
+  }) {
+    try {
+      await this.elasticsearchService.update({
+        index: 'port-scanning-events',
+        id: `${scanData.srcIp}-${scanData.timestamp}`,
+        body: {
+          doc: {
+            srcIp: scanData.srcIp,
+            uniquePortsCount: scanData.uniquePortsCount,
+            connectionCount: scanData.connectionCount,
+            timestamp: new Date(scanData.timestamp).toISOString(),
+          },
+          doc_as_upsert: true,
+        },
+      });
+      console.log(`Saved port scan for ${scanData.srcIp} to Elasticsearch.`);
+    } catch (error) {
+      console.error('Error saving to Elasticsearch:', error);
+    }
   }
 }

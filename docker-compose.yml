@@ -45,8 +45,11 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_user # Use the new username
       - ELASTICSEARCH_PASSWORD=password # Use the new password
+      - xpack.encryptedSavedObjects.encryptionKey=123456789012345678901234567890aa # Set the persistent encryption key
     depends_on:
       - elasticsearch
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml # Mount the kibana.yml file with the encryption key
 
 volumes:
   es_data:

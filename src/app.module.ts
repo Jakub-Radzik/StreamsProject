@@ -6,6 +6,7 @@ import { ReceiverModule } from './receiver/receiver.module';
 import configuration from './config/configuration';
 import { CacheModule } from '@nestjs/cache-manager';
 import { DetectionModule } from './detection/detection.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { DetectionModule } from './detection/detection.module';
     ElasticsearchModule,
     DetectionModule,
     ReceiverModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [],

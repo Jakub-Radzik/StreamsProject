@@ -4,12 +4,20 @@ import { PcapParsedPacket } from 'src/common/types/pcap.models';
 import { createHash } from 'crypto';
 
 const network_index = 'network-packets';
+const alarms_index = 'port-scan-alarms';
 
 @Injectable()
 export class ElasticsearchService {
   constructor(
     @Inject('ELASTICSEARCH_CLIENT') private readonly client: Client,
   ) {}
+
+  async get(index: string, id: string) {
+    return this.client.get({
+      index,
+      id,
+    });
+  }
 
   async search(query: any) {
     return this.client.search({
@@ -58,5 +66,14 @@ export class ElasticsearchService {
     const uniqueString = `${src_ip_addr}-${dest_ip_addr}-${timestamp}-${identification}`;
 
     return createHash('sha256').update(uniqueString).digest('hex');
+  }
+
+  async update(params: { index: string; id: string; body: any }) {
+    return this.client.update({
+      index: params.index,
+      id: params.id,
+      body: params.body,
+      retry_on_conflict: 3,
+    });
   }
 }
