@@ -7,14 +7,12 @@ import {
   TransportPayload,
 } from 'src/common/types/pcap.models';
 import { IPProtocol } from 'src/common/types/ip.protocols';
-import { ElasticsearchService } from 'src/elasticsearch/elasticsearch.service';
+import { Alarms } from 'src/common/types/elastic';
+import { PortScanData } from './types';
 
 @Injectable()
 export class PortScanService {
-  constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private readonly elasticsearchService: ElasticsearchService,
-  ) {}
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
   async processPcapPacket(parsedPacket: PcapParsedPacket) {
     const { ethernetPayload, timestamp } = parsedPacket;
@@ -58,7 +56,7 @@ export class PortScanService {
     const UNIQUE_PORTS_THRESHOLD = 50;
     const CONNECTIONS_THRESHOLD = 50;
 
-    const flaggedKey = `flagged:${src_ip_addr}`;
+    const flaggedKey = `flagged:${Alarms.PORT_SCAN}:${src_ip_addr}`;
 
     if (
       uniquePortsCount > UNIQUE_PORTS_THRESHOLD &&
@@ -67,39 +65,14 @@ export class PortScanService {
       await this.cacheManager.set(
         flaggedKey,
         {
+          incident_type: Alarms.PORT_SCAN,
           srcIp: src_ip_addr,
           uniquePortsCount,
           connectionCount,
           timestamp,
-        },
+        } as PortScanData,
         200_000,
       );
-    }
-  }
-
-  async saveToElasticsearch(scanData: {
-    srcIp: string;
-    uniquePortsCount: number;
-    connectionCount: number;
-    timestamp: number;
-  }) {
-    try {
-      await this.elasticsearchService.update({
-        index: 'port-scanning-events',
-        id: `${scanData.srcIp}-${scanData.timestamp}`,
-        body: {
-          doc: {
-            srcIp: scanData.srcIp,
-            uniquePortsCount: scanData.uniquePortsCount,
-            connectionCount: scanData.connectionCount,
-            timestamp: new Date(scanData.timestamp).toISOString(),
-          },
-          doc_as_upsert: true,
-        },
-      });
-      console.log(`Saved port scan for ${scanData.srcIp} to Elasticsearch.`);
-    } catch (error) {
-      console.error('Error saving to Elasticsearch:', error);
     }
   }
 }

@@ -2,34 +2,94 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { PortScanService } from './port-scan.service';
+import { ElasticsearchService } from 'src/elasticsearch/elasticsearch.service';
+import { ALARM_INDEX, Alarms } from 'src/common/types/elastic';
+import { DocType, FloodData, PortScanData } from './types';
 
 @Injectable()
 export class PortScanSchedulerService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private readonly portScanService: PortScanService,
+    private readonly elasticsearchService: ElasticsearchService,
   ) {}
 
-  @Cron('30 * * * * *')
+  @Cron('*/10 * * * * *')
   async checkAndSaveFlaggedScans() {
-    console.log('CHECK FLAGGED SCANS');
     const keys = await this.cacheManager.store.keys();
+
+    const alarmsToSave = [];
 
     for (const key of keys) {
       if (key.startsWith('flagged:')) {
-        const scanData = await this.cacheManager.get<{
-          srcIp: string;
-          uniquePortsCount: number;
-          connectionCount: number;
-          timestamp: number;
-        }>(key);
+        try {
+          const splitKey = key.split(':');
+          const incident_type = splitKey[1] as Alarms;
 
-        if (scanData) {
-          await this.portScanService.saveToElasticsearch(scanData);
-          await this.cacheManager.del(key);
+          let scanData;
+          let id;
+          let doc;
+
+          switch (incident_type) {
+            case Alarms.PORT_SCAN:
+              scanData = await this.cacheManager.get<PortScanData>(key);
+              if (scanData) {
+                id = `${scanData.srcIp}-${scanData.timestamp}-${scanData.incident_type}`;
+                doc = {
+                  incident_type: scanData.incident_type,
+                  srcIp: scanData.srcIp,
+                  uniquePortsCount: scanData.uniquePortsCount,
+                  connectionCount: scanData.connectionCount,
+                  timestamp: new Date(scanData.timestamp).toISOString(),
+                };
+                alarmsToSave.push({ id, doc, alarm: scanData.incident_type });
+                await this.cacheManager.del(key);
+              }
+              break;
+
+            case Alarms.ICMP_FLOOD:
+            case Alarms.SYN_FLOOD:
+            case Alarms.UDP_FLOOD:
+              scanData = await this.cacheManager.get<FloodData>(key);
+              if (scanData) {
+                id = `${scanData.srcIp}-${scanData.timestamp}-${scanData.incident_type}`;
+                doc = {
+                  incident_type: scanData.incident_type,
+                  srcIp: scanData.srcIp,
+                  packetsCount: scanData.packetsCount,
+                  timestamp: new Date(scanData.timestamp).toISOString(),
+                };
+                alarmsToSave.push({ id, doc, alarm: scanData.incident_type });
+                await this.cacheManager.del(key);
+              }
+              break;
+          }
+        } catch (error) {
+          console.error(`Error processing cache key ${key}:`, error);
         }
       }
+    }
+
+    // Save alarms in bulk to Elasticsearch
+    if (alarmsToSave.length > 0) {
+      await this.saveAlarmsBulk(alarmsToSave);
+    }
+  }
+
+  async saveAlarmsBulk(alarms: { id: string; doc: DocType; alarm: Alarms }[]) {
+    const body = alarms.flatMap(({ id, doc }) => [
+      { update: { _index: ALARM_INDEX, _id: id } },
+      { doc, doc_as_upsert: true },
+    ]);
+
+    try {
+      const response = await this.elasticsearchService.bulk(body);
+      if (response.errors) {
+        console.error('Some alarms failed to save in bulk:', response.items);
+      } else {
+        console.log(`Saved ${alarms.length} alarms to Elasticsearch.`);
+      }
+    } catch (error) {
+      console.error('Error saving alarms to Elasticsearch in bulk:', error);
     }
   }
 }

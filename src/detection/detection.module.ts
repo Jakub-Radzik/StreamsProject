@@ -5,7 +5,7 @@ import { FloodDetectionService } from './flood-detection.service';
 import { PortScanSchedulerService } from './port-scan-scheduler.service';
 
 @Module({
-  exports: [PortScanService],
+  exports: [PortScanService, FloodDetectionService],
   imports: [ElasticsearchModule],
   providers: [PortScanService, FloodDetectionService, PortScanSchedulerService],
 })

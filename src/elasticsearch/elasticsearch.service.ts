@@ -2,9 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Client } from '@elastic/elasticsearch';
 import { PcapParsedPacket } from 'src/common/types/pcap.models';
 import { createHash } from 'crypto';
-
-const network_index = 'network-packets';
-const alarms_index = 'port-scan-alarms';
+import { NETWORK_INDEX } from 'src/common/types/elastic';
 
 @Injectable()
 export class ElasticsearchService {
@@ -21,7 +19,8 @@ export class ElasticsearchService {
 
   async search(query: any) {
     return this.client.search({
-      index: network_index,
+      // It should be more generic (any index)
+      index: NETWORK_INDEX,
       body: query,
     });
   }
@@ -32,6 +31,26 @@ export class ElasticsearchService {
       id,
       body,
     });
+  }
+
+  async bulk(operations: any[]) {
+    try {
+      const response = await this.client.bulk({
+        body: operations,
+      });
+
+      if (response.errors) {
+        const erroredDocuments = response.items.filter(
+          (item: any) => item.index && item.index.error,
+        );
+        console.error('Bulk operation had errors:', erroredDocuments);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Error in bulk operation:', error);
+      throw error;
+    }
   }
 
   async deleteData(index: string, id: string) {
@@ -45,7 +64,9 @@ export class ElasticsearchService {
     const { ethernetPayload, timestamp, timestampISO, caplen, len, link_type } =
       packet;
     const id = this.generatePacketId(packet);
-    await this.indexData(network_index, id, {
+
+    // It should be somewhere else
+    await this.indexData(NETWORK_INDEX, id, {
       link_type,
       timestamp,
       timestampISO,
