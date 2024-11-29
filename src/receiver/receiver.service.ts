@@ -4,6 +4,7 @@ import { ElasticsearchService } from 'src/elasticsearch/elasticsearch.service';
 import { PcapIncomingPacket } from 'src/common/types/pcap.models';
 import { PcapNetworkService } from './pcap.network.service';
 import { FloodDetectionService } from 'src/detection/flood-detection.service';
+import { DnsAmplificationDetectionService } from 'src/detection/dns-amplification.service';
 
 @Injectable()
 export class ReceiverService {
@@ -12,13 +13,15 @@ export class ReceiverService {
     private readonly portScanService: PortScanService,
     private readonly elasticSearchService: ElasticsearchService,
     private readonly floodDetectionService: FloodDetectionService,
+    private readonly dnsAmplificationService: DnsAmplificationDetectionService,
   ) {}
 
   async handlePcapNetworkData(jsonMessage: PcapIncomingPacket) {
     const parsedPacket =
       this.pcapNetworkService.parseIncomingPacket(jsonMessage);
-    this.portScanService.processPcapPacket(parsedPacket);
+    // this.portScanService.processPcapPacket(parsedPacket);
     this.floodDetectionService.detectFlood(parsedPacket);
-    this.elasticSearchService.indexPacket(parsedPacket);
+    // this.elasticSearchService.indexPacket(parsedPacket);
+    this.dnsAmplificationService.detect(parsedPacket);
   }
 }

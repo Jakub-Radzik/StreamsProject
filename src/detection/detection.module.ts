@@ -6,7 +6,11 @@ import { PortScanSchedulerService } from './port-scan-scheduler.service';
 import { DnsAmplificationDetectionService } from './dns-amplification.service';
 
 @Module({
-  exports: [PortScanService, FloodDetectionService],
+  exports: [
+    PortScanService,
+    FloodDetectionService,
+    DnsAmplificationDetectionService,
+  ],
   imports: [ElasticsearchModule],
   providers: [
     PortScanService,

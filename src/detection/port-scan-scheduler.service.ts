@@ -4,7 +4,12 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ElasticsearchService } from 'src/elasticsearch/elasticsearch.service';
 import { ALARM_INDEX, Alarms } from 'src/common/types/elastic';
-import { DocType, FloodData, PortScanData } from './types';
+import {
+  DnsAmplificationData,
+  DocType,
+  FloodData,
+  PortScanData,
+} from './types';
 
 @Injectable()
 export class PortScanSchedulerService {
@@ -60,6 +65,23 @@ export class PortScanSchedulerService {
                   timestamp: new Date(floodData.timestamp).toISOString(),
                 };
                 alarmsToSave.push({ id, doc, alarm: floodData.incident_type });
+                await this.cacheManager.del(key);
+              }
+              break;
+
+            case Alarms.DNS_AMPLIFICATION:
+              const dnsData =
+                await this.cacheManager.get<DnsAmplificationData>(key);
+              if (dnsData) {
+                id = `${dnsData.destIp}-${dnsData.timestamp}-${dnsData.incident_type}`;
+                doc = {
+                  incident_type: dnsData.incident_type,
+                  srcIp: dnsData.srcIp,
+                  destIp: dnsData.destIp,
+                  packetsCount: dnsData.count,
+                  timestamp: new Date(dnsData.timestamp).toISOString(),
+                };
+                alarmsToSave.push({ id, doc, alarm: dnsData.incident_type });
                 await this.cacheManager.del(key);
               }
               break;

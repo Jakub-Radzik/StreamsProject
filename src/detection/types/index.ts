@@ -1,4 +1,5 @@
 import { Alarms } from 'src/common/types/elastic';
+import { PcapParsedPacket } from 'src/common/types/pcap.models';
 
 export type PortScanData = {
   srcIp: string;
@@ -16,6 +17,15 @@ export type FloodData = {
   timestamp: number;
 };
 
-export interface DocType extends Omit<FloodData | PortScanData, 'timestamp'> {
+export type DnsAmplificationData = {
+  srcIp: string;
+  destIp: string;
+  count: number;
+  timestamp: number;
+  incident_type: Alarms.DNS_AMPLIFICATION;
+};
+
+export interface DocType
+  extends Omit<FloodData | PortScanData | DnsAmplificationData, 'timestamp'> {
   timestamp: string;
 }

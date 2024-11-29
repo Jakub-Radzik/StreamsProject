@@ -3,12 +3,13 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PcapParsedPacket } from 'src/common/types/pcap.models';
 import { Alarms } from 'src/common/types/elastic';
+import { DnsAmplificationData } from './types';
 
 @Injectable()
 export class DnsAmplificationDetectionService {
-  private readonly DNS_RESPONSE_SIZE_THRESHOLD = 512; // Bytes
-  private readonly DNS_AMPLIFICATION_THRESHOLD = 100; // Number of responses
-  private readonly CACHE_TTL = 60 * 1000; // 60 seconds
+  private readonly DNS_RESPONSE_SIZE_THRESHOLD = 512;
+  private readonly DNS_AMPLIFICATION_THRESHOLD = 100;
+  private readonly CACHE_TTL = 60 * 1000;
 
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
@@ -71,11 +72,12 @@ export class DnsAmplificationDetectionService {
     const existingAlarm = await this.cacheManager.get(alarmKey);
 
     if (!existingAlarm) {
-      const newAlarm = {
+      const newAlarm: DnsAmplificationData = {
         srcIp,
         destIp,
         count,
         timestamp,
+        incident_type: Alarms.DNS_AMPLIFICATION,
       };
 
       await this.cacheManager.set(alarmKey, newAlarm, this.CACHE_TTL);
