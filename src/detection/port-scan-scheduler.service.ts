@@ -76,20 +76,19 @@ export class PortScanSchedulerService {
   }
 
   async saveAlarmsBulk(alarms: { id: string; doc: DocType; alarm: Alarms }[]) {
-    const body = alarms.flatMap(({ id, doc }) => [
-      { update: { _index: ALARM_INDEX, _id: id } },
-      { doc, doc_as_upsert: true },
-    ]);
-
-    try {
-      const response = await this.elasticsearchService.bulk(body);
-      if (response.errors) {
-        console.error('Some alarms failed to save in bulk:', response.items);
-      } else {
-        console.log(`Saved ${alarms.length} alarms to Elasticsearch.`);
+    for (const alarm of alarms) {
+      try {
+        await this.elasticsearchService.indexData(
+          ALARM_INDEX,
+          alarm.id,
+          alarm.doc,
+        );
+      } catch (error) {
+        console.error(
+          `Error saving alarm ${alarm.alarm} to Elasticsearch:`,
+          error,
+        );
       }
-    } catch (error) {
-      console.error('Error saving alarms to Elasticsearch in bulk:', error);
     }
   }
 }

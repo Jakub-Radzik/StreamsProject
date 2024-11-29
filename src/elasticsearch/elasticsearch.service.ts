@@ -43,7 +43,10 @@ export class ElasticsearchService {
         const erroredDocuments = response.items.filter(
           (item: any) => item.index && item.index.error,
         );
-        console.error('Bulk operation had errors:', erroredDocuments);
+        console.error(
+          'Bulk operation had errors:',
+          JSON.stringify(erroredDocuments),
+        );
       }
 
       return response;

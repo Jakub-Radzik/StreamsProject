@@ -103,6 +103,9 @@ export type TransportPayload = {
   options?: TcpOptions; // TCP options if applicable
   dataLength: number; // Length of the payload
   data?: PayloadData; // Actual payload data
+
+  // Used in ICMP packets values: "0" and "8"
+  type?: number; // Type of the payload
 };
 
 // Structure for payload of the packet

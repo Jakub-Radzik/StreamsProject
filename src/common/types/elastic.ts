@@ -6,4 +6,5 @@ export enum Alarms {
   SYN_FLOOD = 'syn-flood',
   ICMP_FLOOD = 'icmp-flood',
   UDP_FLOOD = 'udp-flood',
+  MAFLORMED_PACKET = 'malformed-packet',
 }
