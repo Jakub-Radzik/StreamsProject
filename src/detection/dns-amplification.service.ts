@@ -8,7 +8,7 @@ import { DnsAmplificationData } from './types';
 @Injectable()
 export class DnsAmplificationDetectionService {
   private readonly DNS_RESPONSE_SIZE_THRESHOLD = 512;
-  private readonly DNS_AMPLIFICATION_THRESHOLD = 100;
+  private readonly DNS_AMPLIFICATION_THRESHOLD = 1000;
   private readonly CACHE_TTL = 60 * 1000;
 
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
@@ -20,10 +20,9 @@ export class DnsAmplificationDetectionService {
     ) {
       const srcIp = packet.ethernetPayload.ipPayload.src_ip_addr;
       const destIp = packet.ethernetPayload.ipPayload.dest_ip_addr;
-      const dataLength =
-        packet.ethernetPayload.ipPayload.transportPayload?.dataLength;
+      const packetLength = packet.len;
 
-      if (dataLength && dataLength > this.DNS_RESPONSE_SIZE_THRESHOLD) {
+      if (packetLength && packetLength > this.DNS_RESPONSE_SIZE_THRESHOLD) {
         const dnsAmplificationData =
           await this.incrementDnsAmplificationCounter(srcIp, destIp);
 
@@ -67,23 +66,30 @@ export class DnsAmplificationDetectionService {
     count: number,
     timestamp: number,
   ) {
-    const alarmKey = `flagged:${Alarms.DNS_AMPLIFICATION}:${destIp}:${srcIp}:${timestamp}`;
+    const timeWindow = Math.floor(timestamp / 10000) * 10000; // Normalize timestamp to the nearest 10 seconds
+    const alarmKey = `flagged:${Alarms.DNS_AMPLIFICATION}:${destIp}:${srcIp}:${timeWindow}`;
 
-    const existingAlarm = await this.cacheManager.get(alarmKey);
+    const existingAlarm =
+      await this.cacheManager.get<DnsAmplificationData>(alarmKey);
 
-    if (!existingAlarm) {
+    if (existingAlarm) {
+      existingAlarm.count += count;
+      await this.cacheManager.set(alarmKey, existingAlarm, this.CACHE_TTL);
+    } else {
       const newAlarm: DnsAmplificationData = {
         srcIp,
         destIp,
         count,
-        timestamp,
+        timestamp: timeWindow,
         incident_type: Alarms.DNS_AMPLIFICATION,
       };
 
       await this.cacheManager.set(alarmKey, newAlarm, this.CACHE_TTL);
 
       console.log(
-        `DNS Amplification Attack detected! Victim: ${destIp}, Responses: ${count}, From DNS Server: ${srcIp}, Timestamp: ${timestamp}`,
+        `DNS Amplification Attack detected! Victim: ${destIp}, Responses: ${count}, From DNS Server: ${srcIp}, Time Window Start: ${new Date(
+          timeWindow,
+        ).toISOString()}`,
       );
     }
   }
