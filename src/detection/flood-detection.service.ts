@@ -17,6 +17,8 @@ export class FloodDetectionService {
     const destIp = packet.ethernetPayload.ipPayload.dest_ip_addr;
 
     const icmpFlood = await this.isIcmpFlood(packet);
+    const udpFlood = await this.isUdpFlood(packet);
+    const synFlood = await this.isSynFlood(packet);
 
     if (icmpFlood) {
       await this.raiseAlarm(
@@ -27,6 +29,61 @@ export class FloodDetectionService {
         destIp,
       );
     }
+
+    if (udpFlood) {
+      await this.raiseAlarm(
+        Alarms.UDP_FLOOD,
+        udpFlood.totalCount,
+        packet.timestamp,
+        Array.from(udpFlood.srcIps),
+        destIp,
+      );
+    }
+
+    if (synFlood) {
+      await this.raiseAlarm(
+        Alarms.SYN_FLOOD,
+        synFlood.totalCount,
+        packet.timestamp,
+        Array.from(synFlood.srcIps),
+        destIp,
+      );
+    }
+  }
+
+  private async isSynFlood(packet: PcapParsedPacket) {
+    if (packet.ethernetPayload.ipPayload.protocol_name === 'TCP') {
+      const transportPayload =
+        packet.ethernetPayload.ipPayload.transportPayload;
+
+      if (
+        transportPayload &&
+        transportPayload.flags.syn &&
+        !transportPayload.flags.ack
+      ) {
+        const destIp = packet.ethernetPayload.ipPayload.dest_ip_addr;
+        const src_ip_addr = packet.ethernetPayload.ipPayload.src_ip_addr;
+        const cached = await this.incrementCounter(destIp, 'SYN', src_ip_addr);
+
+        if (cached.totalCount >= this.SYN_FLOOD_THRESHOLD) {
+          return cached;
+        }
+      }
+    }
+    return null;
+  }
+
+  private async isUdpFlood(packet: PcapParsedPacket) {
+    if (packet.ethernetPayload.ipPayload.protocol_name === 'UDP') {
+      const destIp = packet.ethernetPayload.ipPayload.dest_ip_addr;
+      const srcIp = packet.ethernetPayload.ipPayload.src_ip_addr;
+      const cached = await this.incrementCounter(destIp, 'UDP', srcIp);
+
+      if (cached.totalCount >= this.UDP_FLOOD_THRESHOLD) {
+        return cached;
+      }
+    }
+    return null;
   }
 
   private async isIcmpFlood(packet: PcapParsedPacket) {
@@ -34,13 +91,11 @@ export class FloodDetectionService {
       const icmpPayload = packet.ethernetPayload.ipPayload.transportPayload;
 
       if (icmpPayload?.type === 8) {
-        // ICMP type 8 is an echo request (attack packet)
         const destIp = packet.ethernetPayload.ipPayload.dest_ip_addr;
         const srcIp = packet.ethernetPayload.ipPayload.src_ip_addr;
 
         const cached = await this.incrementCounter(destIp, 'ICMP', srcIp);
 
-        // Check if the total packet count exceeds the threshold
         if (cached.totalCount >= this.ICMP_FLOOD_THRESHOLD) {
           return cached;
         }
@@ -56,28 +111,24 @@ export class FloodDetectionService {
   ) {
     const cacheKey = `counter-${destIp}-${protocol}`;
 
-    // Retrieve or initialize the cache entry for the victim's IP (destIp)
     const cached = (await this.cacheManager.get<{
-      totalCount: number; // Total packets to destIp
-      srcIps: Map<string, number>; // Map of attacker srcIps to packet counts
+      totalCount: number;
+      srcIps: Map<string, number>;
     }>(cacheKey)) || {
       totalCount: 0,
       srcIps: new Map<string, number>(),
     };
 
-    // Increment the overall count for the victim (destIp)
     cached.totalCount++;
 
-    // Increment the count for the specific attacker (srcIp)
     const currentCount = cached.srcIps.get(srcIp) || 0;
     cached.srcIps.set(srcIp, currentCount + 1);
 
-    // Update the cache with a TTL
     await this.cacheManager.set(cacheKey, cached, 60_000);
 
     return {
       totalCount: cached.totalCount,
-      srcIps: cached.srcIps.keys(), // Return attacker IPs
+      srcIps: cached.srcIps.keys(),
     };
   }
 
@@ -109,59 +160,6 @@ export class FloodDetectionService {
   }
 }
 
-// const udpFlood = await this.isUdpFlood(packet);
-
-// if (synFlood) {
-//   await this.raiseAlarm(
-//     Alarms.SYN_FLOOD,
-//     synFlood,
-//     packet.timestamp,
-//     srcIp,
-//     desIp,
-//   );
-// }
-
-// if (udpFlood) {
-//   await this.raiseAlarm(
-//     Alarms.UDP_FLOOD,
-//     udpFlood,
-//     packet.timestamp,
-//     srcIp,
-//     desIp,
-//   );
-// }
+// SINCE WE HAVE NO VALID DATA FOR DETECTION
 
 // SINCE WE HAVE NO VALID DATA FOR DETECTION
-// private async isSynFlood(packet: PcapParsedPacket) {
-//   if (packet.ethernetPayload.ipPayload.protocol_name === 'TCP') {
-//     const transportPayload =
-//       packet.ethernetPayload.ipPayload.transportPayload;
-
-//     if (
-//       transportPayload &&
-//       transportPayload.flags.syn &&
-//       !transportPayload.flags.ack
-//     ) {
-//       const destIp = packet.ethernetPayload.ipPayload.dest_ip_addr;
-//       const synCount = await this.incrementCounter(destIp, 'SYN');
-
-//       if (synCount >= this.SYN_FLOOD_THRESHOLD) {
-//         return synCount;
-//       }
-//     }
-//   }
-//   return null;
-// }
-
-// SINCE WE HAVE NO VALID DATA FOR DETECTION
-// private async isUdpFlood(packet: PcapParsedPacket) {
-//   if (packet.ethernetPayload.ipPayload.protocol_name === 'UDP') {
-//     const destIp = packet.ethernetPayload.ipPayload.dest_ip_addr;
-//     const udpCount = await this.incrementCounter(destIp, 'UDP');
-
-//     if (udpCount >= this.UDP_FLOOD_THRESHOLD) {
-//       return udpCount;
-//     }
-//   }
-//   return null;
-// }

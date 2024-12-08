@@ -106,6 +106,7 @@ export type TransportPayload = {
 
   // Used in ICMP packets values: "0" and "8"
   type?: number; // Type of the payload
+  dest_prot?: string;
 };
 
 // Structure for payload of the packet

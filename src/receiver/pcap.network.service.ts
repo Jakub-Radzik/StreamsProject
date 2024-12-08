@@ -9,6 +9,7 @@ import {
   PcapIncomingPacket,
   PcapParsedPacket,
 } from 'src/common/types/pcap.models';
+import { portToAppMap } from 'src/common/types/portToApp';
 
 @Injectable()
 export class PcapNetworkService {
@@ -63,6 +64,10 @@ export class PcapNetworkService {
       payload,
     } = ipPayload;
 
+    const dest_prot = payload
+      ? (portToAppMap.get(payload.dport) ?? 'Unknown')
+      : 'Unknown';
+
     return {
       version,
       headerLength,
@@ -77,7 +82,10 @@ export class PcapNetworkService {
       headerChecksum,
       src_ip_addr: this.formatAddress(saddr),
       dest_ip_addr: this.formatAddress(daddr),
-      transportPayload: payload,
+      transportPayload: {
+        ...payload,
+        dest_prot,
+      },
     };
   }
 
