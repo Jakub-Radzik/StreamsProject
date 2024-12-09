@@ -7,4 +7,5 @@ export enum Alarms {
   ICMP_FLOOD = 'icmp-flood',
   UDP_FLOOD = 'udp-flood',
   DNS_AMPLIFICATION = 'dns-amplification',
+  STATISTIC_ANOMALY = 'statistic-anomaly',
 }

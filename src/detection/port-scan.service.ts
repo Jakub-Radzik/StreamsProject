@@ -40,7 +40,7 @@ export class PortScanService {
 
     const timeWindowKey = `${src_ip_addr}:recent`;
 
-    let scanData = (await this.cacheManager.get<{
+    const scanData = (await this.cacheManager.get<{
       ports: Set<number>;
       count: number;
     }>(timeWindowKey)) || { ports: new Set(), count: 0 };

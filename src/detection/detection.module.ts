@@ -4,12 +4,15 @@ import { ElasticsearchModule } from 'src/elasticsearch/elasticsearch.module';
 import { FloodDetectionService } from './flood-detection.service';
 import { PortScanSchedulerService } from './port-scan-scheduler.service';
 import { DnsAmplificationDetectionService } from './dns-amplification.service';
+import { PacketSizeService } from './packet-size.service';
+import { StandardDeviationAnalysisService } from './analysis.service';
 
 @Module({
   exports: [
     PortScanService,
     FloodDetectionService,
     DnsAmplificationDetectionService,
+    StandardDeviationAnalysisService,
   ],
   imports: [ElasticsearchModule],
   providers: [
@@ -17,6 +20,8 @@ import { DnsAmplificationDetectionService } from './dns-amplification.service';
     FloodDetectionService,
     PortScanSchedulerService,
     DnsAmplificationDetectionService,
+    PacketSizeService,
+    StandardDeviationAnalysisService,
   ],
 })
 export class DetectionModule {}

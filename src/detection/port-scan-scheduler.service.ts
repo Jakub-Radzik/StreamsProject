@@ -9,6 +9,7 @@ import {
   DocType,
   FloodData,
   PortScanData,
+  StatisticAnomalyData,
 } from './types';
 
 @Injectable()
@@ -82,6 +83,29 @@ export class PortScanSchedulerService {
                   timestamp: new Date(dnsData.timestamp).toISOString(),
                 };
                 alarmsToSave.push({ id, doc, alarm: dnsData.incident_type });
+                await this.cacheManager.del(key);
+              }
+              break;
+
+            case Alarms.STATISTIC_ANOMALY:
+              const statisticData =
+                await this.cacheManager.get<StatisticAnomalyData>(key);
+              if (statisticData) {
+                id = `${statisticData.packet.ethernetPayload.ipPayload.src_ip_addr}-${statisticData.timestamp}-${statisticData.type}-${statisticData.threshold}`;
+                doc = {
+                  incident_type: statisticData.incident_type,
+                  timestamp: new Date(statisticData.timestamp).toISOString(),
+                  type: statisticData.type,
+                  mean: statisticData.mean,
+                  stdDev: statisticData.stdDev,
+                  packet: statisticData.packet,
+                  threshold: statisticData.threshold,
+                };
+                alarmsToSave.push({
+                  id,
+                  doc,
+                  alarm: statisticData.incident_type,
+                });
                 await this.cacheManager.del(key);
               }
               break;

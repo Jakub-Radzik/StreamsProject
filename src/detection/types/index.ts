@@ -25,6 +25,18 @@ export type DnsAmplificationData = {
   incident_type: Alarms.DNS_AMPLIFICATION;
 };
 
+export type StatisticAnomalyType = 'Packet Size Anomaly';
+
+export type StatisticAnomalyData = {
+  type: StatisticAnomalyType;
+  threshold: number;
+  timestamp: number;
+  mean: number;
+  stdDev: number;
+  packet: PcapParsedPacket;
+  incident_type: Alarms.STATISTIC_ANOMALY;
+};
+
 export interface DocType
   extends Omit<FloodData | PortScanData | DnsAmplificationData, 'timestamp'> {
   timestamp: string;
