@@ -3,10 +3,10 @@ const { Kafka } = require('kafkajs');
 
 const prefixFiles = './data';
 const fileNames = [
-  'DNS_amplify.pcap',
-  'ICMP_Flood.pcap',
-  'SYN_Flood.pcap',
-  'UDP_Flood.pcap',
+  'DNS_amplify_2.pcap',
+  // 'ICMP_Flood.pcap',
+  // 'SYN_Flood.pcap',
+  // 'UDP_Flood.pcap',
   // 'port_scan_from_192.168.1.69_to_192.168.1.4.pcap',
 ];
 

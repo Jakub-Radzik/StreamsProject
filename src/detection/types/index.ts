@@ -41,3 +41,13 @@ export interface DocType
   extends Omit<FloodData | PortScanData | DnsAmplificationData, 'timestamp'> {
   timestamp: string;
 }
+
+export interface ClassifiedPacket {
+  dataLength: number;
+  caplen: number;
+  dport: number;
+  sport: number;
+  label: 'normal' | 'malicious';
+}
+
+export type UnclassifiedPacket = Omit<ClassifiedPacket, 'label'>;
