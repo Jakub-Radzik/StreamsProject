@@ -63,7 +63,7 @@ export class ElasticsearchService {
     });
   }
 
-  async indexPacket(packet: PcapParsedPacket): Promise<void> {
+  async indexPacket(packet: PcapParsedPacket, label?: string): Promise<void> {
     const { ethernetPayload, timestamp, timestampISO, caplen, len, link_type } =
       packet;
     const id = this.generatePacketId(packet);
@@ -76,6 +76,7 @@ export class ElasticsearchService {
       caplen,
       len,
       ethernetPayload,
+      label: label || 'Not classified',
     });
   }
 

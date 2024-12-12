@@ -6,6 +6,7 @@ import { PortScanSchedulerService } from './port-scan-scheduler.service';
 import { DnsAmplificationDetectionService } from './dns-amplification.service';
 import { PacketSizeService } from './packet-size.service';
 import { StandardDeviationAnalysisService } from './analysis.service';
+import { KnnService } from './knn.service';
 
 @Module({
   exports: [
@@ -13,6 +14,7 @@ import { StandardDeviationAnalysisService } from './analysis.service';
     FloodDetectionService,
     DnsAmplificationDetectionService,
     StandardDeviationAnalysisService,
+    KnnService,
   ],
   imports: [ElasticsearchModule],
   providers: [
@@ -22,6 +24,7 @@ import { StandardDeviationAnalysisService } from './analysis.service';
     DnsAmplificationDetectionService,
     PacketSizeService,
     StandardDeviationAnalysisService,
+    KnnService,
   ],
 })
 export class DetectionModule {}
