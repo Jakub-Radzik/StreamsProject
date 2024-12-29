@@ -4,9 +4,12 @@ import { ElasticsearchModule } from 'src/elasticsearch/elasticsearch.module';
 import { FloodDetectionService } from './flood-detection.service';
 import { PortScanSchedulerService } from './port-scan-scheduler.service';
 import { DnsAmplificationDetectionService } from './dns-amplification.service';
-import { PacketSizeService } from './packet-size.service';
-import { StandardDeviationAnalysisService } from './analysis.service';
+import { PacketSizeService } from './analysis-services/packet-size.service';
+import { StandardDeviationAnalysisService } from './analysis-services/analysis.service';
 import { KnnService } from './knn.service';
+import { PacketRateService } from './analysis-services/packet-rate.service';
+import { BloomFilterService } from './bloom-filter.service';
+import { LenDportCorrelationService } from './lendport-corr.service';
 
 @Module({
   exports: [
@@ -15,6 +18,8 @@ import { KnnService } from './knn.service';
     DnsAmplificationDetectionService,
     StandardDeviationAnalysisService,
     KnnService,
+    BloomFilterService,
+    LenDportCorrelationService,
   ],
   imports: [ElasticsearchModule],
   providers: [
@@ -23,8 +28,11 @@ import { KnnService } from './knn.service';
     PortScanSchedulerService,
     DnsAmplificationDetectionService,
     PacketSizeService,
+    PacketRateService,
     StandardDeviationAnalysisService,
     KnnService,
+    BloomFilterService,
+    LenDportCorrelationService,
   ],
 })
 export class DetectionModule {}

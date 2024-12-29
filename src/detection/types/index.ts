@@ -25,7 +25,9 @@ export type DnsAmplificationData = {
   incident_type: Alarms.DNS_AMPLIFICATION;
 };
 
-export type StatisticAnomalyType = 'Packet Size Anomaly';
+export type StatisticAnomalyType =
+  | 'Packet Size Anomaly'
+  | 'Packet Rate Anomaly';
 
 export type StatisticAnomalyData = {
   type: StatisticAnomalyType;

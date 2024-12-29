@@ -15,6 +15,13 @@ export class KnnService implements OnModuleInit {
     this.normalizeTrainingData();
   }
 
+  private minMax = {
+    dataLength: { min: Infinity, max: -Infinity },
+    caplen: { min: Infinity, max: -Infinity },
+    dport: { min: Infinity, max: -Infinity },
+    sport: { min: Infinity, max: -Infinity },
+  };
+
   private normalizeTrainingData() {
     console.log('Normalizing training data');
     const features = ['dataLength', 'caplen', 'dport', 'sport'];
@@ -48,17 +55,24 @@ export class KnnService implements OnModuleInit {
   }
 
   private normalizePacket(packet: PcapParsedPacket): UnclassifiedPacket {
-    // Implement the same normalization as training data
-    // This requires storing min and max values or using a library
-    // For simplicity, assuming min-max normalization was done and provided
-    // Alternatively, skip normalization if not needed
-
-    return {
+    const rawValues: UnclassifiedPacket = {
       dataLength: packet.len ?? 0,
+      caplen: packet.caplen ?? 0,
       dport: packet.ethernetPayload?.ipPayload?.transportPayload.dport ?? 0,
       sport: packet.ethernetPayload?.ipPayload?.transportPayload.sport ?? 0,
-      caplen: packet.caplen ?? 0,
     };
+
+    const normalized: UnclassifiedPacket = { ...rawValues };
+
+    (Object.keys(this.minMax) as (keyof typeof this.minMax)[]).forEach(
+      (feature) => {
+        const range = this.minMax[feature].max - this.minMax[feature].min || 1;
+        normalized[feature] =
+          (rawValues[feature] - this.minMax[feature].min) / range;
+      },
+    );
+
+    return normalized;
   }
 
   public classify(packet: PcapParsedPacket): 'normal' | 'malicious' {
